@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Artist {
+  id            String          @id
+  firstName     String
+  lastName      String
+  stageName     String          @unique
+  image         String
+  bio           String
+  createdAt     DateTime        @default(now())
+  podcasts      Podcast[]
+  songs_artists Songs_Artists[]
+
+  @@map("artists")
+}
+
+model Genre {
+  id    String  @id
+  name  String  @unique
+  songs Song[]
+
+  @@map("genres")
+}
+
+model playlists {
+  id              String            @id
+  name            String
+  description     String?
+  createdAt       DateTime          @default(now())
+  songs_playlists Songs_Playlists[]
+}
+
+model Podcast {
+  id        String   @id
+  name      String
+  duration  Int
+  image     String?
+  authorId  String
+  createdAt DateTime @default(now())
+  artists   Artist  @relation(fields: [authorId], references: [id])
+
+  @@map("podcasts")
+}
+
+model Song {
+  id              String            @id
+  name            String
+  duration        Int
+  image           String?
+  createdAt       DateTime          @default(now())
+  genreId         String
+  genres          Genre           @relation(fields: [genreId], references: [id])
+  songs_artists   Songs_Artists[]
+  songs_playlists Songs_Playlists[]
+
+  @@map("songs")
+}
+
+model Songs_Artists {
+  songId   String
+  artistId String
+  role     Role
+  artists  Artist @relation(fields: [artistId], references: [id])
+  songs    Song   @relation(fields: [songId], references: [id])
+
+  @@id([songId, artistId])
+  @@map("songs_artists")
+}
+
+model Songs_Playlists {
+  songId     String
+  playlistId String
+  assignedAt DateTime  @default(now())
+  playlists  playlists @relation(fields: [playlistId], references: [id])
+  songs      Song     @relation(fields: [songId], references: [id])
+
+  @@id([songId, playlistId])
+  @@map("songs_playlists")
+}
+
+enum Role {
+  MAIN
+  FEAT
+}
